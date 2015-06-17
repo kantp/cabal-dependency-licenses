@@ -7,7 +7,7 @@ module Main
 
 --------------------------------------------------------------------------------
 import           Control.Monad                      (forM_, unless)
-import           Data.List                          (foldl', sort)
+import           Data.List                          (foldl', intercalate, sort)
 import           Data.Maybe                         (catMaybes)
 import           Data.Set                           (Set)
 import qualified Data.Set                           as Set
@@ -112,13 +112,15 @@ printDependencyLicenseList byLicense =
         putStrLn $ "# " ++ Cabal.display license
         putStrLn ""
 
-        let sortedNames = sort $ map getName ipis
-        forM_ sortedNames $ \name -> putStrLn $ "- " ++ name
+        let sortedNames = sort $ map getInfo ipis
+        forM_ sortedNames $ \ (info) -> putStrLn $ "- " ++ intercalate "\n  " info
         putStrLn ""
   where
-    getName =
-        Cabal.display . Cabal.pkgName . InstalledPackageInfo.sourcePackageId
-
+    getInfo = \ ipi -> filter (not . null) $
+       [Cabal.display . Cabal.pkgName . InstalledPackageInfo.sourcePackageId $ ipi]
+       ++ lines (InstalledPackageInfo.copyright ipi)
+       ++ [ InstalledPackageInfo.homepage ipi
+          , InstalledPackageInfo.pkgUrl ipi]
 
 --------------------------------------------------------------------------------
 main :: IO ()
